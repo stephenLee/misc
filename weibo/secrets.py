@@ -1,3 +1,3 @@
-CLIENT_ID = '357199909'
-CLIENT_SECRET = '85cab851da0baf8ea08c13523355a504' 
+CLIENT_ID = 'your client id'
+CLIENT_SECRET = 'your client secret' 
 

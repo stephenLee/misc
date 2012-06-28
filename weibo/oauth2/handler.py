@@ -39,6 +39,7 @@ class OAuth2Handler(object):
     def _oauth2_callback(self):
         """Step 2 of OAuth 2.0, whenever the user accepts or denies access."""
         code = self.request.get('code', None)
+        logging.info('code is: %s' % code)
         error = self.request.get('error', None)
         callback_url = self._callback_uri()
         access_token_url = URLS[1]
@@ -63,7 +64,22 @@ class OAuth2Handler(object):
         )
   
         auth_info = self._json_parser(resp.content)
-        return auth_info
+        logging.info('auth_info is %s' % auth_info)
+        user_data = getattr(self, '_get_weibo_user_info')(auth_info, uid='1748366623')
+        logging.info('user_data is %s' % user_data)
+        #should be implemented by the actual app
+        self._on_sign_in(auth_info, user_data)
+    
+    def _get_weibo_user_info(self, auth_info, uid=''):
+        """
+        https://api.weibo.com/2/users/show.json
+        """
+        url  = 'https://api.weibo.com/2/users/show.json?uid=%s&{0}' % uid
+        resp = self._oauth2_request(url, auth_info['access_token'])
+        
+        uinfo = json.loads(resp)
+        uinfo.setdefault('link', 'http://weibo.com/%s' % uinfo['screen_name'])
+        return uinfo
 
     def _callback_uri(self):
         """Returns a callback URL for a 2nd step of the auth process.
@@ -81,6 +97,7 @@ class OAuth2Handler(object):
 
     def _oauth2_request(self, url, token):
         """Makes an HTTP request with OAuth 2.0 access token using App Engine URLfetch API"""
+        logging.info('access_token request url is: %s' % url.format(urlencode({'access_token': token})))
         return urlfetch.fetch(url.format(urlencode({'access_token':token}))).content
 
 

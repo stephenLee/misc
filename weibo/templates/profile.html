@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "base.html" %}
 
 {% block content %}
   <div class="media">
@@ -7,7 +7,7 @@
     </div>
     <div class="body">
       <h1 style="margin-top: 0; padding-top: 0">{{ user.name }}</h1>
-      <p><a href="{{ user.link }}" target="_blank" rel="nofollow">{{ user.link }}</a></p>
+      <p><a href="{{ user.link }}" target="_blank" rel="nofollow">{{ user.name }}</p>
     </div>
   </div>
 {% endblock %}
