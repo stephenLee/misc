@@ -16,7 +16,7 @@ except ImportError:
 
 URLS = ['https://graph.renren.com/oauth/authorize?{0}', 'https://graph.renren.com/oauth/token']
 
-BASE_URL = 'http://api.renren.com/restserver.do'
+BASE_URL = 'http://api.renren.com/restserver.do?'
 
 from google.appengine.api import urlfetch
 
@@ -68,7 +68,7 @@ class OAuth2Handler(object):
             headers={'Content-Type': 'application/x-www-form-urlencoded'}
         )
   
-        auth_info = self._json_parser(resp.content)
+        auth_info = json.loads(resp.content)
         logging.info('auth_info is %s' % auth_info)
         user_data = getattr(self, '_get_renren_users_info')(auth_info)
         logging.info('user_data is %s' % user_data)
@@ -76,23 +76,22 @@ class OAuth2Handler(object):
         self._on_sign_in(auth_info, user_data)
     
     def _get_renren_users_info(self, auth_info, method='users.getInfo', 
-			                        v='1.0', format='json'):
-        """
-          http://api.renren.com/restserver.do
-        """
+			             v='1.0', format='json'):
         call_id = str(int(time.time()*1000))
-        params={
-            'access_token': auth_info['access_token'],
+        params = {
+            'access_token': auth_info['access_token'], 
             'v': v,
             'method': method,
             'call_id': call_id,
             'format': format
             }
-        self._get_sig(params)
+        sig = self._get_sig(params)
         params.update({'sig': sig})
         url = self._concat_url(params)
-        resp = urlfetch.fetch(url).content
-        uinfo = json.loads(resp)
+        logging.info('request url is %s' % url)
+        resp = urlfetch.fetch(url, method=urlfetch.POST).content
+        logging.info(resp)
+        uinfo = json.loads(resp)[0]
         uinfo.setdefault('link', 'http://renren.com/%s' % uinfo['uid'])
         return uinfo
 
@@ -109,21 +108,17 @@ class OAuth2Handler(object):
         Defaults to None. You should redefine this method and return real values."""
         return (None, None, None)
 
-    def _json_parser(self, body):
-        """Parses body string into JSON dict"""
-        return json.loads(body)
-
-    def _unicode_encode(str):
+    def _unicode_encode(self, str):
         """Detect if a string is unicode and encode as utf-8 if necessary"""
         return isinstance(str, unicode) and str.encode('utf-8') or str
 
-    def _get_sig(params):
-        message = ''.join(['$s=%s' % (self._unicode_encode(k), self._unicode_encode(v)) for (k, v) in sorted(params.iteritems())])
+    def _get_sig(self, params):
+        message = ''.join(['%s=%s' % (self._unicode_encode(k), self._unicode_encode(v)) for (k, v) in sorted(params.iteritems())])
         m = hashlib.md5(message + self._get_consumer_info()[1])
         sig = m.hexdigest()
         return sig
 
-    def _concat_url(params):
-        url = '&'.join(['%s=%s' % (self._unicde_encode(k), self._unicode_encode(v)) for (k, v) in param.iteritems()])
+    def _concat_url(self, params):
+        url = '&'.join(['%s=%s' % (self._unicode_encode(k), self._unicode_encode(v)) for (k, v) in params.iteritems()])
         return BASE_URL + url
 

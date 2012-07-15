@@ -79,13 +79,13 @@ class Logout(BaseHandler):
 
 class AuthHandler(BaseHandler, OAuth2Handler):
     USER_ATTRS = {
-        'screen_name': 'name',
-        'profile_image_url': 'avatar_url',
+        'name': 'name',
+        'headurl': 'avatar_url',
         'link': 'link'
         }
 
     def _on_sign_in(self, auth_info, data):
-        auth_id = data['id']
+        auth_id = data['uid']
         auth_id = str(auth_id)
         logging.info('Looking for a user with id %s' % auth_id)
         user = self.auth.store.user_model.get_by_auth_id(auth_id)
@@ -108,8 +108,7 @@ class AuthHandler(BaseHandler, OAuth2Handler):
             else:
                 logging.info('Creating a brand new user')
                 ok, user = self.auth.store.user_model.create_user(
-                    auth_id, **self._to_user_model_attrs(data, self.USER_ATTRS)
-                    )
+                    auth_id, **self._to_user_model_attrs(data, self.USER_ATTRS))
                 if ok:
                     self.auth.set_session(
                         self.auth.store.user_to_dict(user)
@@ -128,7 +127,6 @@ class AuthHandler(BaseHandler, OAuth2Handler):
             if k in attrs_map:
                 key = attrs_map[k]
                 user_attrs.setdefault(key, v)
-
         return user_attrs
 
 class ProfileHandler(BaseHandler):
