@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 application: renren 
+=======
+application: renren
+>>>>>>> b09adac9e0035ead5da08ee8a9828773ba475253
 version: 1
 runtime: python27
 api_version: 1
