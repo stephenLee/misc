@@ -1,0 +1,21 @@
+* {margin:0;padding:0;}
+
+html, body {height: 100%;}
+
+#wrap {min-height: 100%;}
+
+#main {
+    overflow: visible;
+    padding-bottom: 40px;
+    padding-top: 200px;
+    padding-left: 600px;
+}  /* must be same height as the footer */
+
+footer {
+    position: relative;
+    margin-top: -40px; /* negative value of footer height */
+    height: 40px;
+    clear:both;
+    border: none;
+    padding: 0px;
+}

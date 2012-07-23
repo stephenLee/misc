@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import logging
 
 from urllib import urlencode
@@ -65,21 +67,15 @@ class OAuth2Handler(object):
   
         auth_info = self._json_parser(resp.content)
         logging.info('auth_info is %s' % auth_info)
-        user_data = getattr(self, '_get_weibo_user_info')(auth_info, uid='1748366623')
+        uid = self._get_user_id(auth_info)
+        #get user data
+        user_data = getattr(self, '_get_weibo_user_info')(auth_info, uid=uid)
         logging.info('user_data is %s' % user_data)
+        #get followers
+        followers = getattr(self, '_get_followers')(auth_info, uid=uid)
+        logging.info('followers are %s' % followers)
         #should be implemented by the actual app
         self._on_sign_in(auth_info, user_data)
-    
-    def _get_weibo_user_info(self, auth_info, uid=''):
-        """
-        https://api.weibo.com/2/users/show.json
-        """
-        url  = 'https://api.weibo.com/2/users/show.json?uid=%s&{0}' % uid
-        resp = self._oauth2_request(url, auth_info['access_token'])
-        
-        uinfo = json.loads(resp)
-        uinfo.setdefault('link', 'http://weibo.com/%s' % uinfo['screen_name'])
-        return uinfo
 
     def _callback_uri(self):
         """Returns a callback URL for a 2nd step of the auth process.
@@ -97,10 +93,46 @@ class OAuth2Handler(object):
 
     def _oauth2_request(self, url, token):
         """Makes an HTTP request with OAuth 2.0 access token using App Engine URLfetch API"""
-        logging.info('access_token request url is: %s' % url.format(urlencode({'access_token': token})))
+        logging.info('request url is: %s' % url.format(urlencode({'access_token': token})))
         return urlfetch.fetch(url.format(urlencode({'access_token':token}))).content
 
 
     def _json_parser(self, body):
         """Parses body string into JSON dict"""
         return json.loads(body)
+
+    def _get_user_id(self, auth_info):
+        """
+        OAuth授权之后，获取授权用户的UID
+        https://api.weibo.com/2/account/get_uid.json
+        """
+        url = 'https://api.weibo.com/2/account/get_uid.json?{0}'
+        resp = self._oauth2_request(url, auth_info['access_token'])
+        content = json.loads(resp)
+        logging.info('uid information is %s' % content)
+        return content['uid']
+
+    def _get_weibo_user_info(self, auth_info, uid=''):
+        """
+        https://api.weibo.com/2/users/show.json
+        """
+        url  = 'https://api.weibo.com/2/users/show.json?uid=%s&{0}' % uid
+        resp = self._oauth2_request(url, auth_info['access_token'])
+        
+        uinfo = json.loads(resp)
+        uinfo.setdefault('link', 'http://weibo.com/%s' % uinfo['screen_name'])
+        return uinfo
+
+
+    def _get_followers(self, auth_info, uid=''):
+        """
+        获取用户的粉丝列表(GET request)
+        https://api.weibo.com/2/friendships/followers.json
+        """
+        url = 'https://api.weibo.com/2/friendships/followers.json?uid=%s&{0}' % uid
+        resp = self._oauth2_request(url, auth_info['access_token'])
+        
+        followers = json.loads(resp)
+        return followers
+
+        

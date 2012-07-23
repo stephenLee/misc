@@ -130,6 +130,7 @@ class AuthHandler(BaseHandler, OAuth2Handler):
                 user_attrs.setdefault(key, v)
 
         return user_attrs
+
 class ProfileHandler(BaseHandler):
     def get(self):
         """Handles GET /profile"""
