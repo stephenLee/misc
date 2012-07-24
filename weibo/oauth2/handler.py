@@ -76,6 +76,7 @@ class OAuth2Handler(object):
         logging.info('followers are %s' % followers)
         #should be implemented by the actual app
         self._on_sign_in(auth_info, user_data)
+        self._list_followers(followers)
 
     def _callback_uri(self):
         """Returns a callback URL for a 2nd step of the auth process.

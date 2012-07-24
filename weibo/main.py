@@ -21,7 +21,7 @@ config['webapp2_extras.auth'] = {
 # Map URLs to handlers
 routes = [
     Route('/', handler='handlers.FrontHandler'),
-    Route('/profile', handler='handlers.ProfileHandler', name='profile'),
+    Route('/profile', handler='handlers.ProfileHandler:_list_followers', name='profile'),
     Route('/auth/weibo', handler='handlers.AuthHandler:_oauth2_init',name='auth_login'),
     Route('/auth/weibo/callback', handler='handlers.AuthHandler:_oauth2_callback', name='auth_callback'),
     Route('/logout', handler='handlers.LogoutHandler', name='logout')

@@ -83,8 +83,11 @@ class AuthHandler(BaseHandler, OAuth2Handler):
         'profile_image_url': 'avatar_url',
         'link': 'link'
         }
-
-    def _on_sign_in(self, auth_info, data):
+    FOLLOWERS_ATTRS = {
+        'screen_name': 'name',
+        'profile_image_url': 'avatar_url'
+        }
+    def _on_sign_in(self, auth_info, data, followers):
         auth_id = data['id']
         auth_id = str(auth_id)
         logging.info('Looking for a user with id %s' % auth_id)
@@ -114,30 +117,60 @@ class AuthHandler(BaseHandler, OAuth2Handler):
                     self.auth.set_session(
                         self.auth.store.user_to_dict(user)
                         )
+                    followers = self._to_followers_model(self.FOLLOWERS_ATTRS)
+
         self.redirect('/profile')
+
+            context = {'user': self.user_model, 
+                       'session': self.auth.get_user_by_session(),
+                       'followers': followers}
+            self.render_response('profile.html', **context)   
+        else:
+            self.redirect('/')
+            
+    def _to_followers_model(self, data, attrs_map):
+        followers = {}
+        for k, v in data.iteritems():
+            if k in attrs_map:
+                key = attrs_map[k]
+                followers.setdefault(key, v)
+        return followers
 
     def _get_consumer_info(self):
         return (secrets.CLIENT_ID, secrets.CLIENT_SECRET)
     
     def _callback_uri(self):
         return self.uri_for('auth_callback', _full=True)
-    
+
     def _to_user_model_attrs(self, data, attrs_map):
         user_attrs = {}
         for k, v in data.iteritems():
             if k in attrs_map:
                 key = attrs_map[k]
                 user_attrs.setdefault(key, v)
-
         return user_attrs
 
-class ProfileHandler(BaseHandler):
-    def get(self):
+class ProfileHandler(BaseHandler, OAuth2Handler):
+
+    FOLLOWERS_ATTRS = {
+        'screen_name': 'name',
+        'profile_image_url': 'avatar_url'
+        }
+    def _list_followers(self, followers):
         """Handles GET /profile"""
         if self.user:
+            followers = self._to_followers_model(self.FOLLOWERS_ATTRS)
             context = {'user': self.user_model, 
-                       'session': self.auth.get_user_by_session()}
-            self.render_response('profile.html', **context)
+                       'session': self.auth.get_user_by_session(),
+                       'followers': followers}
+            self.render_response('profile.html', **context)   
         else:
             self.redirect('/')
             
+    def _to_followers_model(self, data, attrs_map):
+        followers = {}
+        for k, v in data.iteritems():
+            if k in attrs_map:
+                key = attrs_map[k]
+                followers.setdefault(key, v)
+        return followers
