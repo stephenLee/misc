@@ -119,14 +119,14 @@ class AuthHandler(BaseHandler, OAuth2Handler):
                         )
                     followers = self._to_followers_model(self.FOLLOWERS_ATTRS)
 
-        self.redirect('/profile')
+                    self.redirect('/profile')
 
-            context = {'user': self.user_model, 
-                       'session': self.auth.get_user_by_session(),
-                       'followers': followers}
-            self.render_response('profile.html', **context)   
-        else:
-            self.redirect('/')
+                    context = {'user': self.user_model, 
+                               'session': self.auth.get_user_by_session(),
+                               'followers': followers}
+                    self.render_response('profile.html', **context)   
+                else:
+                    self.redirect('/')
             
     def _to_followers_model(self, data, attrs_map):
         followers = {}
